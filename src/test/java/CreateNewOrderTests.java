@@ -1,12 +1,6 @@
 import io.qameta.allure.Description;
-import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
-import io.restassured.RestAssured;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.response.Response;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -14,11 +8,8 @@ import org.junit.runners.Parameterized;
 import java.util.Arrays;
 import java.util.List;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.notNullValue;
-
 @RunWith(Parameterized.class)
-public class CreateNewOrderTests<firstName, lastName, address, metroStation, phone, color, comment, deliveryDate, rentTime> {
+public class CreateNewOrderTests<firstName, lastName, address, metroStation, phone, color, comment, deliveryDate, rentTime> extends BaseTest {
     private String firstName;
     private String lastName;
     private String address;
@@ -52,45 +43,14 @@ public class CreateNewOrderTests<firstName, lastName, address, metroStation, pho
         };
     }
 
-    @BeforeClass
-    public static void log() {
-        RestAssured.filters(new RequestLoggingFilter(), new ResponseLoggingFilter());
-    }
-
-    @Before
-    public void setUp() {
-        RestAssured.baseURI = "https://qa-scooter.praktikum-services.ru";
-        RestAssured.basePath = "/api/v1/orders";
-    }
-
-    @Step("Create new order (Send POST request)")
-    public Response sendPostRequestCreateNewOrder(Object order){
-        Response response =given()
-                .header("Content-type", "application/json")
-                .body(order)
-                .and()
-                .when()
-                .post();
-        return response;
-    }
-
-    @Step("Check status code")
-    public void checkStatusCode(Response response){
-        response.then().assertThat().statusCode(201);
-    }
-
-    @Step("Check body contains track")
-    public void checkBodyContainsTrack(Response response){
-        response.then().assertThat().body("track",notNullValue());
-    }
 
     @Test
     @Description("Check response status code and availability track")
     @DisplayName("Create new orders")
     public void createNewOrders() {
         Order order = new Order(firstName, lastName, address, metroStation, phone, rentTime, deliveryDate, comment, color);
-        Response response = sendPostRequestCreateNewOrder(order);
-        checkStatusCode(response);
-        checkBodyContainsTrack(response);
+        Response response = OrderApi.sendPostRequestCreateNewOrder(order);
+        OrderApi.checkStatusCode(response, 201);
+        OrderApi.checkBodyContainsTrack(response);
     }
 }
